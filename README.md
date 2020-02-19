@@ -8,6 +8,8 @@ The aim with this project is to create an isomorphic framework for developing bo
 
 This version currently only supports eris, it being the most lightweight (and of course, functional) of the three libraries listed above.
 
+The project's **Trello Board** can be found [here](https://trello.com/b/EbbE3HSb/snepsek).
+
 ## Modules
 
 A module represents a set of methods, event listeners, and commands that all pertain to a similar functionality, be it fun-related, moderation-related, or something else.
