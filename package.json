@@ -1,0 +1,16 @@
+{
+  "name": "snepsek",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^13.1.8",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.7.5"
+  },
+  "dependencies": {
+    "colors": "^1.4.0",
+    "eris": "^0.11.2",
+    "reflect-metadata": "^0.1.13"
+  }
+}
