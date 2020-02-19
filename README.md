@@ -36,7 +36,7 @@ A command represents a user-triggerable process for interacting with the bot and
 
 The `Context` wrapper class holds information about the context in which the command was run. This inclues the message parsed by the bot, the author, the guild, and settings obtained for the execution to occur.
 
-- reply(content: string) - Reply to the command message
+-   reply(content: string) - Reply to the command message
 
 ## Providers
 

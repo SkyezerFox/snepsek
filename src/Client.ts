@@ -3,7 +3,7 @@ import { existsSync, lstatSync, readdirSync } from 'fs';
 import * as path from 'path';
 
 import { CommandRegistry } from './commands/CommandRegistry';
-import { Module } from './Module';
+import { Module } from './modules/Module';
 import { MemoryProvider } from './providers/MemoryProvider';
 import { GuildSettings, SettingsProvider } from './providers/SettingsProvider';
 import { createLogger } from './utils';
@@ -40,7 +40,7 @@ export class Client extends ErisClient {
 
 	public readonly options: ClientOptions;
 
-	constructor(opts: Partial<ClientOptions>) {
+	constructor(opts?: Partial<ClientOptions>) {
 		super('', opts);
 
 		this.options = {
@@ -197,6 +197,8 @@ export class Client extends ErisClient {
 	async postInitializeModules() {
 		for (const mdl of this.modules) {
 			await mdl[1].moduleDidInit();
+			// Start tasks but don't await - blocks the rest of the bot startup flow if offset is used.
+			mdl[1].startTasks();
 		}
 
 		this.logger.success('Modules post-initialized.');
