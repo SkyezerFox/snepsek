@@ -17,7 +17,14 @@ const DEFAULT_TASK_OPTIONS: ModuleTaskOptions = {
  * Represents a task runnable by a module.
  */
 export class ModuleTask {
-	public runCount = 0;
+	/**
+	 * How many times the task has run.
+	 */
+	get loop() {
+		return this._loop;
+	}
+
+	private _loop = 0;
 
 	private timer?: NodeJS.Timeout;
 
@@ -71,10 +78,36 @@ export class ModuleTask {
 			this.module.logger.error(err);
 		}
 
-		this.runCount++;
+		this._loop++;
 
-		if (this.runCount === this.options.runFor && this.timer) {
+		if (this._loop === this.options.runFor && this.timer) {
 			clearInterval(this.timer);
 		}
+	}
+
+	/**
+	 * Sets the maximum loop count for the task.
+	 * @param count
+	 */
+	setMaxLoopCount(count: number) {
+		this.options.runFor = count;
+	}
+
+	/**
+	 * Set the current loop number.
+	 * @param i
+	 */
+	setLoop(i: number) {
+		this._loop = i;
+		return this;
+	}
+
+	/**
+	 * Set the interval of the loop.
+	 * @param interval
+	 */
+	setLoopInterval(interval: number) {
+		this.options.runEvery = interval;
+		return this;
 	}
 }

@@ -3,6 +3,8 @@ import { Message, MessageContent, MessageFile } from 'eris';
 import { Client } from '../Client';
 import { PagedEmbed, PagedEmbedPage } from '../structures/PagedEmbed';
 import { ChannelTypes } from '../types/Discord';
+import { createLogger, Logger } from '../utils';
+import { Command } from './Command';
 
 /**
  * Wrapper class for the context in which a command is executed.
@@ -23,7 +25,18 @@ export class Context {
 	 */
 	readonly channel = this.message.channel;
 
-	constructor(readonly client: Client, readonly message: Message) {}
+	/**
+	 * Short-cut access to the client's logger.
+	 */
+	readonly logger: Logger;
+
+	constructor(
+		readonly client: Client,
+		readonly message: Message,
+		readonly command: Command
+	) {
+		this.logger = createLogger('Command-' + command.name);
+	}
 
 	/**
 	 * The guild in which the command was executed.
@@ -50,7 +63,7 @@ export class Context {
 	reply(content: MessageContent, file?: MessageFile) {
 		if (typeof content === 'string') {
 			content = {
-				content: `<@${this.message.author.id}>, ${content}`
+				content: `<@${this.message.author.id}>, ${content}`,
 			};
 		}
 		return this.message.channel.createMessage(

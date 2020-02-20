@@ -110,6 +110,6 @@ export class CommandRegistry {
 			return;
 		}
 
-		await cmd.execute(new Context(this.client, message));
+		await cmd.execute(new Context(this.client, message, cmd));
 	}
 }

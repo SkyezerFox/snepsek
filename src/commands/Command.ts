@@ -89,6 +89,11 @@ export class Command {
 					? inhibitor.apply(this.options.module, [ctx])
 					: inhibitor(ctx)));
 			} catch (err) {
+				ctx.client.logger.warn(
+					'Error in inhibitor',
+					inhibitor.name,
+					'- preventing command execution.'
+				);
 				isInhibited = false;
 			}
 
