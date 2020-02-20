@@ -62,8 +62,8 @@ export abstract class Module extends EventEmitter {
 	 * Fetch the commands defined on the module using decorators. Calling this method will add
 	 * commands defined using the `@command` decorator to the modules `commands` map.
 	 *
-	 * **It is not necessary to call this function at runtime!** The Client object the module is
-	 * attatched to calls this during module initialization.
+	 * **It is not necessary to call this function at runtime!** The module itself calls this
+	 * during when it is constructed.
 	 */
 	getCommands() {
 		for (const method of Object.getOwnPropertyNames(
@@ -79,11 +79,24 @@ export abstract class Module extends EventEmitter {
 	}
 
 	/**
-	 * Fetch the commands defined on the module using decorators. Calling this method will add
-	 * commands defined using the `@command` decorator to the modules `commands` map.
+	 * Dynamically add commands to the module.
+	 * @param commands
+	 */
+	addCommand(...commands: Command[]) {
+		for (const command of commands) {
+			this.commands.set(command.name, command);
+			command.options.module = this;
+
+			this.client.emit('commandAdd', command);
+		}
+	}
+
+	/**
+	 * Fetch the tasks defined on the module using decorators. Calling this method will add
+	 * tasks defined using the `@task` decorator to the modules `tasks` map.
 	 *
-	 * **It is not necessary to call this function at runtime!** The Client object the module is
-	 * attatched to calls this during module initialization.
+	 * **It is not necessary to call this function at runtime!** The module itself calls this
+	 * during when it is constructed.
 	 */
 	getTasks() {
 		// Prevent parsing meta-data when you don't need to.
@@ -113,66 +126,35 @@ export abstract class Module extends EventEmitter {
 	}
 
 	/**
-	 * Mark a module method as a command.
-	 * @param commandOpts
+	 * Stop the module's tasks.
 	 */
-	static command = (opts?: CommandOptions) => {
-		return (
-			module: Module,
-			name: string,
-			descriptor: TypedPropertyDescriptor<ModuleCommandHandler>
-		) => {
-			if (!descriptor.value) {
-				return;
-			}
-
-			Reflect.defineMetadata(
-				'command',
-				new Command(name, descriptor.value, { module, ...opts }),
-				module,
-				name
-			);
-		};
-	};
+	public async stopTasks() {
+		this.getTasks().forEach((v) => v.stop());
+	}
 
 	/**
-	 * Mark a command as disabled.
+	 * Stop a specified task.
+	 * @param name
 	 */
-	static disabled = (
-		module: new () => Module,
-		name: string,
-		descriptor: TypedPropertyDescriptor<ModuleCommandHandler>
-	) => {
-		if (descriptor.value instanceof Command) {
-			descriptor.value.disable();
+	public startTask(name: string) {
+		const task = this.tasks.get(name);
+		if (!task) {
+			return false;
 		}
-	};
+
+		return task.start();
+	}
 
 	/**
-	 * Mark a module method as a command.
-	 * @param commandOpts
+	 * Stop a specified task.
+	 * @param name
 	 */
-	static task = (opts?: Partial<ModuleTaskOptions>) => {
-		return (
-			target: Module,
-			name: string,
-			descriptor: TypedPropertyDescriptor<() => Promise<void>>
-		) => {
-			if (!descriptor.value) {
-				return;
-			}
+	public stopTask(name: string) {
+		const task = this.tasks.get(name);
+		if (!task) {
+			return false;
+		}
 
-			Reflect.defineMetadata(
-				'task',
-				new ModuleTask(target, name, descriptor.value, opts),
-				target,
-				name
-			);
-		};
-	};
+		return task.stop();
+	}
 }
-
-// Static module exports for ease of access.
-export const command = Module.command;
-export const disabled = Module.disabled;
-export const task = Module.task;

@@ -91,6 +91,7 @@ export class CommandRegistry {
 			.on('moduleAdd', (m) => {
 				this.registerCommand(...Array.from(m.getCommands().values()));
 			})
+			.on('commandAdd', (c) => this.registerCommand(c))
 			.on('messageCreate', (message) => this._handleMessage(message));
 	}
 
