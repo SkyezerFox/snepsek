@@ -2,8 +2,9 @@ import { Client as ErisClient, ClientEvents, ClientOptions as ErisClientOptions 
 import { existsSync, lstatSync, readdirSync } from 'fs';
 import * as path from 'path';
 
+import { Command } from './commands/Command';
 import { CommandRegistry } from './commands/CommandRegistry';
-import { Module } from './Module';
+import { Module } from './modules/Module';
 import { MemoryProvider } from './providers/MemoryProvider';
 import { GuildSettings, SettingsProvider } from './providers/SettingsProvider';
 import { createLogger } from './utils';
@@ -21,6 +22,7 @@ const DEFAULT_CLIENT_OPTIONS: ClientOptions = {};
 export declare interface Client extends ErisClient {
 	on: ClientEvents<this> & {
 		(event: 'moduleAdd', listener: (module: Module) => void): Client;
+		(event: 'commandAdd', listener: (command: Command) => void): Client;
 	};
 }
 
@@ -40,7 +42,7 @@ export class Client extends ErisClient {
 
 	public readonly options: ClientOptions;
 
-	constructor(opts: Partial<ClientOptions>) {
+	constructor(opts?: Partial<ClientOptions>) {
 		super('', opts);
 
 		this.options = {
@@ -60,21 +62,12 @@ export class Client extends ErisClient {
 	}
 
 	/**
-	 * Stop the bots
-	 */
-	async stop() {
-		this.logger.info('Cleaning up...');
-
-		await this.modulesWillUnload();
-		this.disconnect({ reconnect: false });
-		await this.modulesDidUnload();
-
-		this.logger.info('Done.');
-		process.exit();
-	}
-
-	/**
-	 * Start modules
+	 * Initialize the modules and connect to Discord.
+	 *
+	 * Initialization Order:
+	 * - `moduleWillInit` - module tasks are started after this function has resolved.
+	 * - `connect` - connet to Discord
+	 * - `moduleDidInit`
 	 */
 	async connect(token = this.token) {
 		this.token = token;
@@ -107,6 +100,20 @@ export class Client extends ErisClient {
 	}
 
 	/**
+	 * Stop the client, disconnecting it from Discord and exiting the process.
+	 */
+	async stop() {
+		this.logger.info('Cleaning up...');
+
+		await this.modulesWillUnload();
+		this.disconnect({ reconnect: false });
+		await this.modulesDidUnload();
+
+		this.logger.info('Done.');
+		process.exit();
+	}
+
+	/**
 	 * Add a module to the Client. It is guaranteed that modules will be intialized
 	 * in the order that they appear in the array.
 	 *
@@ -116,12 +123,12 @@ export class Client extends ErisClient {
 		for (const module of modules) {
 			const constructedModule = new module(this);
 
-			constructedModule.getCommands();
 			this.emit('moduleAdd', constructedModule);
 
 			this.modules.set(module.name, constructedModule);
 			if (this.connectionStatus === ConnectionStatus.Ready) {
 				await constructedModule.moduleWillInit();
+				await constructedModule.startTasks();
 				await constructedModule.moduleDidInit();
 			}
 		}
@@ -197,6 +204,8 @@ export class Client extends ErisClient {
 	async postInitializeModules() {
 		for (const mdl of this.modules) {
 			await mdl[1].moduleDidInit();
+			// Start tasks but don't await - blocks the rest of the bot startup flow if offset is used.
+			mdl[1].startTasks();
 		}
 
 		this.logger.success('Modules post-initialized.');
@@ -219,6 +228,7 @@ export class Client extends ErisClient {
 	async modulesWillUnload() {
 		for (const mdl of this.modules) {
 			await mdl[1].moduleWillUnload();
+			await mdl[1].stopTasks();
 		}
 
 		this.logger.success('Modules unloaded.');

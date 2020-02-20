@@ -91,6 +91,7 @@ export class CommandRegistry {
 			.on('moduleAdd', (m) => {
 				this.registerCommand(...Array.from(m.getCommands().values()));
 			})
+			.on('commandAdd', (c) => this.registerCommand(c))
 			.on('messageCreate', (message) => this._handleMessage(message));
 	}
 
@@ -109,6 +110,6 @@ export class CommandRegistry {
 			return;
 		}
 
-		await cmd.execute(new Context(this.client, message));
+		await cmd.execute(new Context(this.client, message, cmd));
 	}
 }

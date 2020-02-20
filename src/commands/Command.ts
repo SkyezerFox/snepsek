@@ -1,4 +1,4 @@
-import { Module } from '../Module';
+import { Module } from '../modules/Module';
 import { Context } from './Context';
 
 /**
@@ -39,6 +39,7 @@ export interface CommandOptions {
 	disabled: boolean;
 	inhibitors: CommandInhibitor[];
 	aliases: string[];
+	module?: Module;
 }
 
 const DEFAULT_COMMAND_OPTIONS: CommandOptions = {
@@ -66,16 +67,13 @@ export class Command {
 	 * Run the command in the given context.
 	 */
 	async execute(ctx: Context) {
-		const inhibited = await this.callInhibitors(ctx);
-		if (inhibited) {
+		if (await this.callInhibitors(ctx)) {
 			return;
 		}
-		this.handler(ctx);
-	}
 
-	protected async evaluatePermission(ctx: Context) {
-		if (ctx.member) {
-		}
+		return this.options.module
+			? this.handler.apply(this.options.module, [ctx])
+			: this.handler(ctx);
 	}
 
 	/**
@@ -87,8 +85,15 @@ export class Command {
 
 		for (const inhibitor of this.inhibitors) {
 			try {
-				isInhibited = !(await inhibitor(ctx));
+				isInhibited = !(await (this.options.module
+					? inhibitor.apply(this.options.module, [ctx])
+					: inhibitor(ctx)));
 			} catch (err) {
+				ctx.client.logger.warn(
+					'Error in inhibitor',
+					inhibitor.name,
+					'- preventing command execution.'
+				);
 				isInhibited = false;
 			}
 

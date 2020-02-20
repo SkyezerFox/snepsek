@@ -8,7 +8,7 @@ export {
 } from './commands/Command';
 export { Context } from './commands/Context';
 
-export { Module, command, disabled } from './Module';
+export { Module, command, disabled, task } from './modules';
 
 export { MemoryProvider } from './providers/MemoryProvider';
 export { GuildSettings } from './providers/SettingsProvider';
