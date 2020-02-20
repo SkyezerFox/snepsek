@@ -28,7 +28,6 @@ export class ModuleTask {
 		readonly options: Partial<ModuleTaskOptions> = DEFAULT_TASK_OPTIONS
 	) {
 		this.options = { ...DEFAULT_TASK_OPTIONS, ...options };
-		this.handler = this.handler.bind(module);
 	}
 
 	/**
@@ -41,13 +40,13 @@ export class ModuleTask {
 
 		if (this.options.runEvery) {
 			this.timer = setInterval(
-				() => this.trigger.apply(this.module),
+				() => this.trigger(),
 				this.options.runEvery
 			);
 		}
 
 		// Run the trigger for the first time.
-		return await this.trigger.apply(this.module);
+		return await this.trigger();
 	}
 
 	/**
@@ -68,8 +67,8 @@ export class ModuleTask {
 		try {
 			await this.handler.apply(this.module);
 		} catch (err) {
-			console.error('Error in task', this.taskName);
-			console.error(err);
+			this.module.logger.error('Error in task', this.taskName);
+			this.module.logger.error(err);
 		}
 
 		this.runCount++;

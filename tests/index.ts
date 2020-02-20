@@ -1,4 +1,4 @@
-import { Client, Module } from '../src';
+import { Client, Context, Module } from '../src';
 
 class TestModule extends Module {
 	public runResult = Date.now();
@@ -14,6 +14,11 @@ class TestModule extends Module {
 	async testTask() {
 		this.logger.debug('task test: ', Date.now() - this.runResult);
 		this.runResult = Date.now();
+	}
+
+	@Module.command()
+	async test(ctx: Context) {
+		ctx.reply(this.runResult.toString());
 	}
 }
 

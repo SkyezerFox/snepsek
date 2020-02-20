@@ -71,6 +71,7 @@ export abstract class Module extends EventEmitter {
 		)) {
 			const command = Reflect.getMetadata('command', this, method);
 			if (command && !this.commands.get(command.name)) {
+				command.options.module = this;
 				this.commands.set(command.name, command);
 			}
 		}
@@ -117,7 +118,7 @@ export abstract class Module extends EventEmitter {
 	 */
 	static command = (opts?: CommandOptions) => {
 		return (
-			target: Module,
+			module: Module,
 			name: string,
 			descriptor: TypedPropertyDescriptor<ModuleCommandHandler>
 		) => {
@@ -127,8 +128,8 @@ export abstract class Module extends EventEmitter {
 
 			Reflect.defineMetadata(
 				'command',
-				new Command(name, descriptor.value, opts),
-				target,
+				new Command(name, descriptor.value, { module, ...opts }),
+				module,
 				name
 			);
 		};
