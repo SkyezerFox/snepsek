@@ -1,12 +1,23 @@
 import { Emoji, Message, PossiblyUncachedMessage } from 'eris';
+import { EventEmitter } from 'events';
 
 import { Context } from '../../commands/Context';
 import { EmbedPage } from './EmbedPage';
 
+export declare interface PagedEmbed extends EventEmitter {
+	on(eventName: 'reactionAdd', listener: (reaction: Emoji) => any): this;
+	on(eventName: 'reaction', listener: (reaction: Emoji) => any): this;
+
+	on<T extends string>(
+		eventName: T,
+		listener: (reaction: Emoji & { name: T }, removed: boolean) => any
+	): this;
+}
+
 /**
  * Represents a pageable embed.
  */
-export class PagedEmbed {
+export class PagedEmbed extends EventEmitter {
 	public readonly pages: EmbedPage[] = [];
 
 	public currentPageIndex = 0;
@@ -17,9 +28,15 @@ export class PagedEmbed {
 	public message?: Message;
 
 	constructor(public readonly context: Context) {
-		this.context.client.on('messageReactionAdd', (m, r) =>
-			this._handle(m, r)
-		);
+		super();
+		this._registerEventListeners();
+	}
+
+	/**
+	 * A boolean determining whether the PagedEmbed has been initialized.
+	 */
+	get initialized() {
+		return this.message ? true : false;
 	}
 
 	/**
@@ -31,6 +48,36 @@ export class PagedEmbed {
 		this.message = await this.context.channel.createMessage({
 			embed: this.currentPage._apiTransform(),
 		});
+
+		return this;
+	}
+
+	/**
+	 * Destroy the PagedEmbed and unregister all event listeners.
+	 */
+	async destroy() {
+		if (this.message) {
+			await this.message.delete();
+		}
+
+		this._unregisterEventListeners();
+		this.removeAllListeners();
+	}
+
+	/**
+	 * Add the default reaction controls to the embed.
+	 */
+	async addDefaultControls() {
+		if (!this.message) {
+			return this;
+		}
+
+		await this.message.addReaction('⬅️');
+		await this.message.addReaction('➡️');
+
+		this.on('⬅️', () => this.previousPage()).on('➡️', () =>
+			this.nextPage()
+		);
 
 		return this;
 	}
@@ -78,17 +125,6 @@ export class PagedEmbed {
 	}
 
 	/**
-	 * Handle a message reaction.
-	 * @param msg
-	 * @param reaction
-	 */
-	private _handle(msg: PossiblyUncachedMessage, reaction: Emoji) {
-		if (msg.id != this.context.message.id) {
-			return;
-		}
-	}
-
-	/**
 	 * Refresh the paged embed, editing the message to be the current page.
 	 */
 	public async refresh(): Promise<this> {
@@ -102,8 +138,85 @@ export class PagedEmbed {
 				embed: this.currentPage._apiTransform(),
 			});
 		} catch (err) {
+			this.context.logger.error(
+				`Error in PagedEmbed created by context '${this.context.command.name}:${this.context.message.id}'`
+			);
 		} finally {
 			return this;
+		}
+	}
+
+	/**
+	 * Client listeners.
+	 */
+	private _listeners: [string, (...args: any[]) => any][] = [
+		[
+			'messageDelete',
+			(msg: PossiblyUncachedMessage) => this._handleMessageDelete(msg),
+		],
+		[
+			'messageReactionAdd',
+			(m: PossiblyUncachedMessage, r: Emoji, u: string) =>
+				this._handleReaction(m, r, u),
+		],
+		[
+			'messageReactionRemove',
+			(m: PossiblyUncachedMessage, r: Emoji, u: string) =>
+				this._handleReaction(m, r, u, true),
+		],
+	];
+
+	/**
+	 * Register the event listeners needed for the PagedEmbed to function correctly.
+	 */
+	private _registerEventListeners() {
+		for (const listener of this._listeners) {
+			this.context.client.on(listener[0], listener[1]);
+		}
+	}
+
+	/**
+	 * Unregister client event listeners.
+	 */
+	private _unregisterEventListeners() {
+		for (const listener of this._listeners) {
+			this.context.client.off(listener[0], listener[1]);
+		}
+	}
+
+	/**
+	 * Handle a message reaction - only accepts from the context dispatcher.
+	 * @param msg
+	 * @param reaction
+	 * @param userId
+	 * @param removed
+	 */
+	private _handleReaction(
+		msg: PossiblyUncachedMessage,
+		reaction: Emoji,
+		userId: string,
+		removed = false
+	) {
+		if (
+			!this.message ||
+			msg.id != this.message.id ||
+			this.context.dispatcher.id != userId
+		) {
+			return;
+		}
+
+		this.emit(removed ? 'reactionAdd' : 'reactionRemove', reaction);
+		this.emit(reaction.name, removed);
+	}
+
+	/**
+	 * Handle the deletion of the PagedEmbed message.
+	 * @param msg
+	 */
+	private _handleMessageDelete(msg: PossiblyUncachedMessage) {
+		if (this.message && msg.id === this.message.id) {
+			this.message = undefined;
+			return this.destroy();
 		}
 	}
 }
