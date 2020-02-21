@@ -1,42 +1,59 @@
 import { Emoji, Message, PossiblyUncachedMessage } from 'eris';
 
-import { Context } from '../commands/Context';
+import { Context } from '../../commands/Context';
+import { EmbedPage } from './EmbedPage';
 
 /**
  * Represents a pageable embed.
  */
 export class PagedEmbed {
-	public readonly pages: PagedEmbedPage[] = [];
+	public readonly pages: EmbedPage[] = [];
 
 	public currentPageIndex = 0;
-	public currentPage = new PagedEmbedPage();
+	public currentPage = new EmbedPage()
+		.setTitle('Paged Embed')
+		.setDescription('Add pages to make this work!');
 
 	public message?: Message;
 
 	constructor(public readonly context: Context) {
-		this.context.client.on('messageReactionAdd', (m, r) => this._handle(m, r));
+		this.context.client.on('messageReactionAdd', (m, r) =>
+			this._handle(m, r)
+		);
 	}
 
+	/**
+	 * Initialize the PagedEmbed.
+	 */
 	async init() {
-		await this.context.channel.createMessage(this.currentPage);
+		this.currentPage = this.pages[0] || this.currentPage;
+
+		this.message = await this.context.channel.createMessage({
+			embed: this.currentPage._apiTransform(),
+		});
 	}
 
 	/**
 	 * Add pages to the embed.
 	 * @param pages
 	 */
-	addPages(...pages: PagedEmbedPage[]) {
+	addPages(...pages: EmbedPage[]): this {
 		this.pages.push(...pages);
 		if (!this.currentPage) {
 			this.currentPage = this.pages[0];
 		}
+		return this;
 	}
 
 	/**
 	 * Move the pageable embed to the next page.
+	 *
+	 * This does not wait for the message's embed to be updated.
 	 */
-	nextPage() {
-		this.currentPage = (this.currentPageIndex + 1) % this.pages.length;
+	nextPage(): this {
+		this.currentPageIndex = (this.currentPageIndex + 1) % this.pages.length;
+		this.refresh();
+		return this;
 	}
 
 	/**
@@ -68,16 +85,21 @@ export class PagedEmbed {
 	}
 
 	/**
-	 * Edit the embed message.
+	 * Refresh the paged embed, editing the message to be the current page.
 	 */
-	private _rehydrateMessage() {
+	public async refresh(): Promise<this> {
 		if (!this.message) {
-			return;
+			return this;
 		}
 		this.currentPage = this.pages[this.currentPageIndex];
 
-		return this.message.edit(this.currentPage);
+		try {
+			await this.message.edit({
+				embed: this.currentPage._apiTransform(),
+			});
+		} catch (err) {
+		} finally {
+			return this;
+		}
 	}
 }
-
-export class PagedEmbedPage {}

@@ -1,7 +1,8 @@
 import { Message, MessageContent, MessageFile } from 'eris';
 
 import { Client } from '../Client';
-import { PagedEmbed, PagedEmbedPage } from '../structures/PagedEmbed';
+import { PagedEmbed } from '../structures/PagedEmbed';
+import { EmbedPage } from '../structures/PagedEmbed/EmbedPage';
 import { ChannelTypes } from '../types/Discord';
 import { createLogger, Logger } from '../utils';
 import { Command } from './Command';
@@ -29,6 +30,8 @@ export class Context {
 	 * Short-cut access to the client's logger.
 	 */
 	readonly logger: Logger;
+
+	public pagedEmbed?: PagedEmbed;
 
 	constructor(
 		readonly client: Client,
@@ -76,7 +79,8 @@ export class Context {
 	 * Create a paged embed from an array of pages, and attach it to this context.
 	 * @param pages
 	 */
-	createPagableEmbed(...pages: PagedEmbedPage[]) {
-		new PagedEmbed(this);
+	createPagedEmbed(...pages: EmbedPage[]) {
+		this.pagedEmbed = new PagedEmbed(this).addPages(...pages);
+		return this.pagedEmbed.init();
 	}
 }
