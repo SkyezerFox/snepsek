@@ -31,6 +31,8 @@ export class PagedEmbed {
 		this.message = await this.context.channel.createMessage({
 			embed: this.currentPage._apiTransform(),
 		});
+
+		return this;
 	}
 
 	/**
@@ -64,6 +66,8 @@ export class PagedEmbed {
 			this.currentPageIndex - 1 === -1
 				? this.pages.length - 1
 				: this.currentPageIndex - 1;
+		this.refresh();
+		return this;
 	}
 
 	/**
