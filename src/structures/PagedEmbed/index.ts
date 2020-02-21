@@ -26,6 +26,7 @@ export class PagedEmbed extends EventEmitter {
 		.setDescription('Add pages to make this work!');
 
 	public message?: Message;
+	public destroyed = false;
 
 	constructor(public readonly context: Context) {
 		super();
@@ -67,13 +68,14 @@ export class PagedEmbed extends EventEmitter {
 
 		this._unregisterEventListeners();
 		this.removeAllListeners();
+		this.destroyed = true;
 	}
 
 	/**
 	 * Add the default reaction controls to the embed.
 	 */
 	async addDefaultControls() {
-		if (!this.message) {
+		if (!this.message || this.destroy) {
 			return this;
 		}
 
@@ -134,7 +136,7 @@ export class PagedEmbed extends EventEmitter {
 	 * Refresh the paged embed, editing the message to be the current page.
 	 */
 	public async refresh(): Promise<this> {
-		if (!this.message) {
+		if (!this.message || this.destroyed) {
 			return this;
 		}
 		this.currentPage = this.pages[this.currentPageIndex];
