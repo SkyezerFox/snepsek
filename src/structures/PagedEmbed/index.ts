@@ -55,9 +55,14 @@ export class PagedEmbed extends EventEmitter {
 	/**
 	 * Destroy the PagedEmbed and unregister all event listeners.
 	 */
-	async destroy() {
+	async destroy(content?: string) {
 		if (this.message) {
-			await this.message.delete();
+			if (content) {
+				await this.message.removeReactions();
+				this.message.edit({ embed: {}, content });
+			} else {
+				await this.message.delete();
+			}
 		}
 
 		this._unregisterEventListeners();
@@ -74,10 +79,11 @@ export class PagedEmbed extends EventEmitter {
 
 		await this.message.addReaction('⬅️');
 		await this.message.addReaction('➡️');
+		await this.message.addReaction('❌');
 
-		this.on('⬅️', () => this.previousPage()).on('➡️', () =>
-			this.nextPage()
-		);
+		this.on('⬅️', () => this.previousPage())
+			.on('➡️', () => this.nextPage())
+			.on('❌', () => this.destroy('✅ Menu closed.'));
 
 		return this;
 	}
