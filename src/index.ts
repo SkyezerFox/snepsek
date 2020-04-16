@@ -1,10 +1,10 @@
 export { Client } from './Client';
 
 export {
-	Command,
-	createInhibitingDecorator,
-	dmOnly,
-	guildOnly,
+  Command,
+  createInhibitingDecorator,
+  dmOnly,
+  guildOnly,
 } from './commands/Command';
 export { Context } from './commands/Context';
 
