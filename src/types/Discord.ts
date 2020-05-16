@@ -1,7 +1,7 @@
 export enum ChannelTypes {
-	Text = 0,
-	DM,
-	Voice,
-	Group,
-	News = 5
+    Text = 0,
+    DM,
+    Voice,
+    Group,
+    News = 5,
 }
