@@ -1,2 +1,2 @@
-export { Module } from './Module';
-export { task, command, disabled } from './ModuleUtils';
+export { Module } from "./Module";
+export { task, command, disabled } from "./ModuleUtils";

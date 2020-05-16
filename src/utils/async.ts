@@ -1,11 +1,11 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 /**
  * Return an awaitable that will resolve in `x` ms.
  * @param x
  */
 export const waitFor = (x: number): Promise<void> =>
-	new Promise((res) => setTimeout(res, x));
+    new Promise((res) => setTimeout(res, x));
 
 /**
  * Return an awaitable that will resolve after the specified event is fired by the given object.
@@ -13,4 +13,4 @@ export const waitFor = (x: number): Promise<void> =>
  * @param event
  */
 export const waitForEvent = (obj: EventEmitter, event: string): Promise<void> =>
-	new Promise((res) => obj.once(event, res));
+    new Promise((res) => obj.once(event, res));

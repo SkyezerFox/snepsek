@@ -1,18 +1,18 @@
 {
-	"compilerOptions": {
-		"target": "esnext",
-		"module": "commonjs",
-		"strict": true,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"outDir": "dist",
-		"declaration": true,
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "commonjs",
+        "strict": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "outDir": "dist",
+        "declaration": true,
 
-		"resolveJsonModule": true,
+        "resolveJsonModule": true,
 
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true
-	},
-	"include": ["src/**/*.*", "tests/**/*.*"],
-	"exclude": ["node_modules"]
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    },
+    "include": ["src/**/*.*", "tests/**/*.*"],
+    "exclude": ["node_modules"]
 }

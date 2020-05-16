@@ -1,23 +1,23 @@
 interface Object {
-	[x: string]:
-		| StringConstructor
-		| ArrayConstructor
-		| NumberConstructor
-		| BooleanConstructor
-		| ObjectConstructor;
+    [x: string]:
+        | StringConstructor
+        | ArrayConstructor
+        | NumberConstructor
+        | BooleanConstructor
+        | ObjectConstructor;
 }
 
 /**
  * Create an object type from the schema of the object.
  */
 export type ObjectFromSchema<T extends Object> = {
-	[P in keyof T]: ReturnType<T[P]>;
+    [P in keyof T]: ReturnType<T[P]>;
 };
 
 interface SchemaValidation<T> {
-	missingEntries: (keyof T)[];
-	invalidTypes: (keyof T)[];
-	valid: boolean;
+    missingEntries: (keyof T)[];
+    invalidTypes: (keyof T)[];
+    valid: boolean;
 }
 
 /**
@@ -26,28 +26,28 @@ interface SchemaValidation<T> {
  * @param obj
  */
 export const validateObject = <T extends any>(
-	schema: T,
-	obj: { [x: string]: any }
+    schema: T,
+    obj: { [x: string]: any }
 ): SchemaValidation<T> => {
-	let validation: SchemaValidation<T> = {
-		missingEntries: [],
-		invalidTypes: [],
-		valid: true
-	};
+    let validation: SchemaValidation<T> = {
+        missingEntries: [],
+        invalidTypes: [],
+        valid: true,
+    };
 
-	Object.entries(schema).forEach((entry) => {
-		if (typeof obj[entry[0]] !== typeof entry[1]()) {
-			validation.invalidTypes.push(entry[0]);
-		}
+    Object.entries(schema).forEach((entry) => {
+        if (typeof obj[entry[0]] !== typeof entry[1]()) {
+            validation.invalidTypes.push(entry[0]);
+        }
 
-		if (typeof obj[entry[0]] == 'undefined') {
-			validation.missingEntries.push(entry[0]);
-		}
+        if (typeof obj[entry[0]] == "undefined") {
+            validation.missingEntries.push(entry[0]);
+        }
 
-		validation.valid =
-			validation.missingEntries.length === 0 &&
-			validation.invalidTypes.length === 0;
-	});
+        validation.valid =
+            validation.missingEntries.length === 0 &&
+            validation.invalidTypes.length === 0;
+    });
 
-	return validation;
+    return validation;
 };
