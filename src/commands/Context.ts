@@ -1,11 +1,12 @@
 import { Message, MessageContent, MessageFile } from "eris";
 
 import { Client } from "../Client";
-import { PagedEmbed, PagedEmbedOptions } from "../structures/PagedEmbed";
+import { PagedEmbed } from "../structures/PagedEmbed";
 import { EmbedPage } from "../structures/PagedEmbed/EmbedPage";
 import { ChannelTypes } from "../types/Discord";
-import { createLogger, Logger } from "../utils";
+import { createLogger } from "../utils";
 import { Command } from "./Command";
+import { Logger } from "winston";
 
 /**
  * Wrapper class for the context in which a command is executed.

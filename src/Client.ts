@@ -12,6 +12,7 @@ import { Module } from "./modules/Module";
 import { MemoryProvider } from "./providers/MemoryProvider";
 import { GuildSettings, SettingsProvider } from "./providers/SettingsProvider";
 import { createLogger } from "./utils";
+import chalk from "chalk";
 
 enum ConnectionStatus {
     Connecting = "CONNECTING",
@@ -56,7 +57,11 @@ export class Client extends ErisClient {
             ...opts,
         };
 
-        this.logger.info(`snepsek v${require("../package.json").version}`);
+        console.log(
+            `\n${chalk.cyan("snepsek")} v${
+                require("../package.json").version
+            }\n`
+        );
 
         this.on("error", (err) => this.logger.error(err)).on("warn", (warn) =>
             this.logger.warn(warn)
@@ -199,7 +204,7 @@ export class Client extends ErisClient {
         for (const mdl of this.modules) {
             await mdl[1].moduleWillInit();
         }
-        this.logger.success("Modules pre-initialized.");
+        this.logger.info("Modules pre-initialized.");
     }
 
     /**
@@ -212,7 +217,7 @@ export class Client extends ErisClient {
             mdl[1].startTasks();
         }
 
-        this.logger.success("Modules post-initialized.");
+        this.logger.info("Modules post-initialized.");
     }
 
     /**
@@ -235,7 +240,7 @@ export class Client extends ErisClient {
             await mdl[1].stopTasks();
         }
 
-        this.logger.success("Modules unloaded.");
+        this.logger.info("Modules unloaded.");
     }
 
     /**
@@ -246,6 +251,6 @@ export class Client extends ErisClient {
             await mdl[1].moduleDidUnload();
         }
 
-        this.logger.success("Modules stopped.");
+        this.logger.info("Modules stopped.");
     }
 }
